@@ -256,6 +256,7 @@ class Slicer(object):                                                         #C
            self.levelz[i*self.winnd:(i+1)*self.winnd] = temprezstore
            self.fluorr = int((temprezstore[-1]-self.mB)/self.mF)
            self.fosfor[i] = self.fluorr
+           print 'Step 2',i
    def localsearch(self, datarray, fluorr, aura):
        bonjovi = 0                                                            #Store results from each step of the local search
        seitan = 0                                                             #When this becomes 0 the local search is done

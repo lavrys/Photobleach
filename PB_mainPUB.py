@@ -37,13 +37,14 @@ def exportData2(a1, a2):
 #Preliminaries and choices
 stat_flag = 3                                                                 #MANUALLY PICK How to get statistics depending on what you know
 dropORpad = 0                                                                 #MANUALLY PICK If the size of your data set is not integer * your window size, set his to 0 to drop the extra data points at the end or to 1 to pad them                  
-interruptflag = 1                                                             #MANUALLY PICK Set to 0 if you want the code to go through without interruption, or to 1 if you want to stop and check the result of your window choice in Step 2 
-fluorupdateflag = 2                                                           #MANUALLY PICK Determines whether you should update your fluorophore numbers from Step 2 (2) or Step 3 (3)
+interruptflag = 0                                                             #MANUALLY PICK Set to 0 if you want the code to go through without interruption, or to 1 if you want to stop and check the result of your window choice in Step 2 
+fluorupdateflag = 3                                                           #MANUALLY PICK Determines whether you should update your fluorophore numbers from Step 2 (2) or Step 3 (3)
 priorsliceflag = 0                                                            #MANUALLY PICK Set to 0 if you want to have an estimate of λeffective from data or 1 if you have some idea of lbar and the last step location               
-zignal = np.loadtxt("DataZ", unpack=True)                                     #Import your data set   
+KVflag = 0                                                                    #MANUALLY PICK Set something other than 0 to give a slice of your data set around the last(in time) step to Kalafut 
+zignal = np.loadtxt("TestDataSet", unpack=True)                            #Import your data set   
 statzignal = np.array(zignal)
 points = len(zignal)                                                          #Number of data points
-windz = 100                                                                   #MANUALLY SET data set window size  
+windz = 50                                                                   #MANUALLY SET data set window size  
 if points%windz==0:
     many_d = points//windz                                                    #Number of windows in data set 
 else:
@@ -57,7 +58,17 @@ print '# of windows:', many_d
 tignal = np.array(zignal) 
 #Get or estimate statistics for background and single fluorophore
 xignal = np.copy(tignal)
-statsignal = np.array(statzignal[::-1])                                       #Invert the data set time-wise to streamline statistics_estimator      
+if KVflag==0:
+    statsignal = statzignal[::-1]                                             #Invert the data set time-wise to streamline statistics_estimator    
+else:
+    byhand1 = 9800
+    byhand2 = 250
+    if byhand1+byhand2>=points:
+        statsignal = np.copy(statzignal[byhand1-byhand2:])
+        statsignal = statsignal[::-1]
+    else:
+        statsignal = np.copy(statzignal[byhand1-byhand2:byhand1+byhand2])
+        statsignal = statsignal[::-1]          
 if stat_flag==0:                                                              #Set stat_flag to 0 if you already know the mean and variance of background and single fluorophore
     mB, vB, mF, vF = 20.0, 0.001, 2.0, 0.2                                                                
     Try0 = KalafutC(statsignal)
@@ -79,6 +90,7 @@ elif stat_flag==3:                                                            #S
     Try3a = Try3.stats  
     tzerom = Try3.tzero    
     mB, vB, mF, vF = Try3a[0], Try3a[1], Try3a[2], Try3a[3]
+print 'KV completed',mB,vB,mF,vF,tzerom
 signal = np.copy(xignal)                                                      #Make anew copy of the data set just for security   
 signal = signal[::-1]                                                         #Invert the signal so that instead of fluorophores bleaching, you have fluorophores been "lit" 
 elax = np.min(signal)
@@ -133,7 +145,7 @@ stepsF = step_locations.flatten()                                             #R
 stepsC = stepsC[1:]
 #stepsC = stepsC[::-1]   
 Out1 = Outputer(signal, stepsF, stepsC, arraystats)
-Outputer.exportData(Out1, Out1.dataset, Out1.fstepsmeans, Out1.skinds, arraystats, 'TAT')
+Outputer.exportData(Out1, Out1.dataset, Out1.fstepsmeans, Out1.skinds, arraystats, 'OOO')
 print ('\a')
 input("\n\nPress Enter to exit.")
 
