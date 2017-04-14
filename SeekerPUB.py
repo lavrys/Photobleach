@@ -156,7 +156,7 @@ class mSICer(object):
             limit += 1
             if best_mSIC2>=old_SIC:                                           #The extra step caused an increase in the criterion; stop further search (assumes smooth path to minimum of criterion value as a function of the number of steps, no ridges) 
                 limit += 9
-                best_mSIC = old_SIC                                           #IMPORTANT: If you are willing to accept a non-smooth path to minimum, you can set this to be equal to best_mSIC2 and set the value of th eprevious line to something smaller or zero. The code will be much slower. esp. if the value is set to zero. 
+                best_mSIC = old_SIC                                           #IMPORTANT: If you are willing to accept a non-smooth path to minimum, you can set this to be equal to best_mSIC2 and set the value of the previous line to something smaller or zero. The code will be much slower. esp. if the value is set to zero. 
                 best_locs = old_locs
                 self.fluorOUT = old_fluor
             elif best_mSIC2<old_SIC:

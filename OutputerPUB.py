@@ -22,9 +22,9 @@ class Outputer(object):
         self.fstepsmeans = self.findMeans(array1, array2)
         self.skinds = np.copy(array4)
     def exportData(self, a1, a2, a4, stz, KK):                                #Outputs files of the data, the found a step dwells means, plus the expected fluorescence given the found active fluorophore numbers and statistics 
-        dexf1 = open('%s_data' % KK,'w')
-        dexf2 = open('%s_found_steps' % KK,'w')
-        dexf4 = open('%s_ active_fluors' % KK,'w')
+        dexf1 = open('%s_data.txt' % KK,'w')
+        dexf2 = open('%s_found_steps.txt' % KK,'w')
+        dexf4 = open('%s_ active_fluors.txt' % KK,'w')
         points1 = len(a1)
         points4 = len(a4)
         for i in range(0,points1,1):
@@ -35,9 +35,14 @@ class Outputer(object):
             dexf2.write(gi2)
             dexf2.write('\n')
         for i in range(0,points4,1):
-            gi4 = str(a4[i]*stz[2]+stz[0])
+            gi4 = str(a4[i])                                                  #str(a4[i]*stz[2]+stz[0]) 
             dexf4.write(gi4)
             dexf4.write('\n')
+        maxfli = np.max(a4)
+        nard = np.diff(a4)
+        maxste = len(nard[nard!=0])
+        print 'total number of fluorescence level changes: ' ,maxste
+        print 'maximum fluorophores active: ' ,maxfli
         dexf1.close()
         dexf2.close()
         dexf4.close()
