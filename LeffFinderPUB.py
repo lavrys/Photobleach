@@ -14,10 +14,37 @@ GNU General Public License for more details.
 """
 import numpy as np
 import math
+from KalafutPUB import KalafutC
 
 
 #This might just as well have been a function. 
 #It finds an estimate of λbar which we need to calculate an array of local λeffectives in the next class
+
+class AssistSlice(object):
+    def __init__(self, dataP):
+        a0 = input('Enter approximate location of last step (1 to 0 fluorophores):\n')
+        print('Reminder: this will take data from 100 points before the approximate step location to the end to find statistics!')
+        self.stats = np.zeros(4)
+        self.szero = np.zeros(1)
+        xignal = dataP[a0-100:]
+        Try1 = KalafutC(xignal)                                                   
+        self.stats = Try1.stats
+        self.szero = Try1.tzero
+
+
+class Manuel(object):
+    def __init__(self, dataP):
+        print('Reminder: the dataset has been reversed in time!')
+        a0 = input('Enter start of background calculation interval:\n')
+        a1 = input('Enter end of background calculation interval:\n')
+        b0 = input('Enter start of single fluorophore calculation interval:\n')
+        b1 = input('Enter end of single fluorophore calculation interval:\n')
+        self.stats = np.zeros(4)
+        self.stats[0] = np.mean(dataP[a0:a1],dtype=np.float64)  
+        self.stats[1] = np.var(dataP[a0:a1],dtype=np.float64)
+        self.stats[2] = np.mean(dataP[b0:b1],dtype=np.float64)
+        self.stats[3] = np.var(dataP[b0:b1],dtype=np.float64)        
+
 
 class LbarFind(object):                                                       #Gives a crude estimate of Lbar
     def __init__(self, dataP, arraystats, tzeroM, fluoMIN):                   #Give the data set, the statistics, the location of the bleach-to-background step and how many fluorophores are still lit at data set start (remember the data set is inversed)

@@ -16,7 +16,7 @@ GNU General Public License for more details.
 import numpy as np
 
 from KalafutPUB import KalafutC 
-from LeffFinderPUB import LbarFind, PriorSlicer, Manuel
+from LeffFinderPUB import LbarFind, PriorSlicer, Manuel, AssistSlice
 from SeekerPUB import Slicer, mSICer
 from OutputerPUB import Outputer
 import time
@@ -45,9 +45,9 @@ interruptflag = 0                                                             #M
 fluorupdateflag = 3                                                           #MANUALLY PICK Determines whether you should update your fluorophore numbers from Step 2 (2) or Step 3 (3)
 priorsliceflag = 0                                                            #MANUALLY PICK Set to 0 if you want to have an estimate of λeffective from data or 1 if you have some idea of lbar and the last step location               
 KVflag = 0                                                                    #MANUALLY PICK Set to something other than 0 to give a slice of your data set around the last(in time) step to Kalafut 
-zignal = np.loadtxt("TestDataSet00.txt", unpack=True)                               #Import your data set   
+zignal = np.loadtxt("TestDataSet", unpack=True)                               #Import your data set   
 points = len(zignal)                                                          #Number of data points
-windz = 100                                                                    #MANUALLY SET data set window size  
+windz = 100                                                                   #MANUALLY SET data set window size  
 if points%windz==0:
     many_d = points//windz                                                    #Number of windows in data set 
 else:
@@ -70,11 +70,11 @@ else:
     lift = 0.0  
 xignal = np.copy(tignal)                                                      #Signal for Kalafut
 if KVflag==0:
-    xignal =xignal[::-1]                                                      #Invert the data set time-wise to streamline statistics_estimator    
+    xignal =xignal[::-1]                                                      #Invert the data set time-wise to streamline statistics_estimator   
+    byhand1 = 920
 else:
-    byhand1 = 9800
-    byhand2 = 250
-    byhand3 = 300
+    byhand1 = 920
+    byhand2 = 865
     if byhand1+byhand2>=points:
         xignal = np.copy(xignal[byhand1-byhand2:])
         xignal = xignal[::-1]
@@ -82,11 +82,11 @@ else:
         xignal = np.copy(xignal[byhand1-byhand2:byhand1+byhand2])
         xignal = xignal[::-1]       
 if stat_flag==0:                                                              #Set stat_flag to 0 if you already know the mean and variance of background and single fluorophore
-    mB, vB, mF, vF = 1109.525, 16206.34, 1791.242, 77124.8                                                                
-    tzerom = byhand3
+    mB, vB, mF, vF = 1.277, 0.03, 1.076, 0.0627                                                                
+    tzerom = points-byhand1
 elif stat_flag==1:                                                            #Set stat_flag to 1 if you already know the mean and variance of the background but not the single fluorophore
     mB, vB = 0.0, 10.0                                                        
-    Try1 = KalafutC(xignal)                                                   #Call Kalafut C from Kalafooter to run the KV algorithm on the data set to get estimate of statistics you do not know
+    Try1 = KalafutC(xignal)                                                   #Call Kalafut C from Kalafooter to run the KV algorithm on the full data set to get estimate of statistics you do not know
     Try1a = Try1.stats
     tzerom = Try1.tzero
     mF, vF = Try1a[2],Try1a[3]
@@ -101,18 +101,22 @@ elif stat_flag==3:                                                            #S
     Try3a = Try3.stats  
     tzerom = Try3.tzero    
     mB, vB, mF, vF = Try3a[0], Try3a[1], Try3a[2], Try3a[3]
-elif stat_flag==4:
+elif stat_flag==4:                                                            #Use if youknow first step location and need to find stats
     Cho = Manuel(xignal)
     arraystats = Cho.stats
-print 'KV completed',mB,vB,mF,vF,tzerom
+elif stat_flag==5:
+    Cho = AssistSlice(tignal)                                                 #Use if you have a rough idea of first step location and want to use Kalafut to find it and the stats around it 
+    tzerom = Cho.szero
+    arraystats = Cho.stats
 print("--- %s seconds ---" % (time.time() - start_time))
 signal = np.copy(tignal)                                                      #Make anew copy of the data set just for security   
 signal = signal[::-1]                                                         #Invert the signal so that instead of fluorophores bleaching, you have fluorophores been "lit" 
-if stat_flag!=4:                                                              
+if stat_flag!=4 and stat_flag!=5:                                                              
     arraystats[0] = mB
     arraystats[1] = vB
     arraystats[2] = mF
     arraystats[3] = vF    
+    print 'KV completed',mB,vB,mF,vF,tzerom
 fluor = 0
 step_locations = np.zeros((many_d,windz))                                     #Precise step locations
 stepsC = np.zeros(1)
@@ -155,7 +159,7 @@ stepsF = step_locations.flatten()                                             #R
 stepsC = stepsC[1:]
 #stepsC = stepsC[::-1]   
 Out1 = Outputer(signal, stepsF, stepsC, arraystats)
-Outputer.exportData(Out1, Out1.dataset, Out1.fstepsmeans, Out1.skinds, arraystats, 'AAA')
+Outputer.exportData(Out1, Out1.dataset, Out1.fstepsmeans, Out1.skinds, arraystats, 'UUU')
 print("--- %s seconds ---" % (time.time() - start_time))
 print ('\a')
 input("\n\nPress Enter to exit.")

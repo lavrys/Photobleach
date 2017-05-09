@@ -30,7 +30,7 @@ class KalafutC(object):
     def KalafutD(self, signal):     
         threshold = 0.9                                                       #MANYALY SET Define a threshold to find the new steps
         jf=[0,len(signal)-1]
-        jrhtest=1                                                             #Define a counter to be as a costraint in the while loop
+        jrhtest=10                                                            #Define a counter to be as a costraint in the while loop
         jignore=[]           
         while (jrhtest>0):    
             minSIC=pow(10,6)                                                  #Define a minimum SIC that is too huge and all the time compare and replace SIC with the lower one
@@ -69,7 +69,7 @@ class KalafutC(object):
                 if jignore.count(jpos) != 1:                                  #Put the rejected step position in the rejection array
                     jignore.extend([jpos])
                     jignore=self.uniq(jignore)
-                    jrhtest+=2           
+                    jrhtest-=1           
             jrhtest-=1       
             jf.sort()                                                         #Sort and "uniq" the step positions
             jf=self.uniq(jf)
