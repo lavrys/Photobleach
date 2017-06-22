@@ -3,6 +3,7 @@
 Created on Mon Sep 12 08:47:29 2016
 @author: Sina Jazani
 @author: Konstantinos Tsekouras
+@author: Aditya Prakash
 Copyright (C) 2015 Sina Jazani, Konstantinos Tsekouras 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -22,66 +23,59 @@ class KalafutC(object):
         self.tzero = self.KalafutD(signal0)[1]
         self.stats = self.findstats(signal0, self.tzero)
     def uniq(self, input):
+        #return list(set(input))
         output = []
         for x in input:
             if x not in output:
                 output.append(x)
         return output 
-    def KalafutD(self, signal):     
-        threshold = 0.9                                                       #MANYALY SET Define a threshold to find the new steps
-        jf=[0,len(signal)-1]
-        jrhtest=10                                                            #Define a counter to be as a costraint in the while loop
+    def KalafutD(self, signal):
+        threshold = 0.9   
+        tot = len(signal) - 1                                                    
+        jf=[0,tot]
+        jrhtest=1                                                             
         jignore=[]           
         while (jrhtest>0):    
-            minSIC=pow(10,6)                                                  #Define a minimum SIC that is too huge and all the time compare and replace SIC with the lower one
+            minSIC=pow(10,6)                                                  
             jpos=0
-            for j2 in range(jf[0]+1,jf[len(jf)-1]-1):                         #For loop to find the new step position                         
-                jtest=[None]*(len(jf))
-                if jf.count(j2) != 1 and jignore.count(j2) != 1:                
-                    jtest=jf[:]
-                    jtest.extend([j2])
-                    jtest.sort()
-                    jtest=self.uniq(jtest)          
+            SIC = []
+            for j2 in range(1,len(signal)-2):
+                if j2 not in jf and j2 not in jignore:               
+                    jtest = sorted(list(set(jf + [j2])))
                     meannn=[None]*(len(jtest)-1)
-                    tot=jtest[len(jtest)-1]
-                    sigs=0
-                    for hate in range(0,len(jtest)-1):
-                        meannn[hate]=sum(signal[jtest[hate]:jtest[hate+1]])/(jtest[hate+1]-jtest[hate])
-                        sigs+=(1./tot)*math.fsum(pow(signal[jtest[hate]:jtest[hate+1]]-meannn[hate],2))
+                    meannn = [sum(signal[jtest[hate]:jtest[hate+1]])/(jtest[hate+1]-jtest[hate]) for hate in range(0,len(jtest)-1)]
+                    sigs = max(0, np.sum([math.fsum(pow(signal[jtest[hate]:jtest[hate+1]]-meannn[hate],2))/tot for hate in range(0,len(jtest)-1)]))
                     if sigs==0:
-                        sigs=1;
-                    SIC=(len(jtest)*(math.log(tot)))+(tot*(math.log(sigs)))         
-                    if SIC<=minSIC:      
-                       minSIC=SIC
-                       jpos=j2   
+                        sigs=1
+                    SIC.append((len(jtest)*(math.log(tot)))+(tot*(math.log(sigs))))
+            jpos = np.argmin(SIC) + 1
+            minSIC = min(minSIC, min(SIC))   
             meanl=0
             meanr=0
-            if jf.count(jpos)!=1:                                             #Find the Mean of right and left side of the new step position           
+            if jpos not in jf:
                 for s in range(0,len(jf)-1):
                     if jf[s]<=jpos and jf[s+1]>jpos and jpos!=0 and abs(jf[s]-jpos)>1 and abs(jf[s+1]-jpos)>1:
                         meanl=math.fsum(signal[jf[s]:jpos])/(jpos-jf[s])
                         meanr=math.fsum(signal[jpos:jf[s+1]])/(jf[s+1]-jpos)  
                         break           
-            if abs(meanl-meanr)>threshold:                                    #Condition to accept the new step position
+            if abs(meanl-meanr)>threshold:                                    
                 jf.extend([jpos])
                 jrhtest+=2
             else:
-                if jignore.count(jpos) != 1:                                  #Put the rejected step position in the rejection array
+                if jpos not in jignore:
                     jignore.extend([jpos])
-                    jignore=self.uniq(jignore)
-                    jrhtest-=1           
+                    jignore = list(set(jignore))
+                    jrhtest+=2           
             jrhtest-=1       
-            jf.sort()                                                         #Sort and "uniq" the step positions
-            jf=self.uniq(jf)
-            if len(jf)+len(jignore)>=len(signal):                             #A condition to break the while loop when the sum of the sizes of accepted and rejected point arrays is higher or equal that the signal size 
+            jf = sorted(list(set(jf)))
+            if len(jf)+len(jignore)>=len(signal):                             
                 break
-            finalsignal=[[None]*(len(jf)-1),[None]*(len(jf)-1)]               #Create a final matrix to plot the results
-            finalsignal[0][:]=range(len(signal)-1)     
-            for mea in range(len(jf)-1):
-                meann=(math.fsum(signal[jf[mea]:jf[mea+1]])/(jf[mea+1]-jf[mea]))
-                finalsignal[1][jf[mea]:jf[mea+1]] = [meann]*(jf[mea+1]-jf[mea])
+            finalsignal = []
+            finalsignal.append(list(range(len(signal)-1)))
+            finalsignal.append([math.fsum(signal[jf[mea]:jf[mea+1]])/(jf[mea+1]-jf[mea]) for mea in range(len(jf)-1) for _ in range(jf[mea+1]-jf[mea])])
         return jf
-    def findstats(self, data2, loc):                                          #loc is the location of the last step as found by Kalafut
+
+    def findstats(self, data2, loc):                                         
         MIN = 1e-10 
         stat_window = 25                                                      #MANUALLY PICK a window size to calculate the mean and variance of the single fluorophore                                   
         stat_val = np.zeros(4)
@@ -90,7 +84,8 @@ class KalafutC(object):
             limi = point + stat_window
         else:
             limi = 3
-            print 'Insufficient data to acquire fluorophore statistics; results unreliable'   
+            #print 'Insufficient data to acquire fluorophore statistics; results unreliable'
+            print('Insufficient data to acquire fluorophore statistics; results unreliable')
         signal_sampleB = np.copy(data2[:point])                               #Use copy just for security
         signal_sampleF = np.copy(data2[point:limi])
         stat_val[0] = np.mean(signal_sampleB,dtype=np.float64)
@@ -100,7 +95,8 @@ class KalafutC(object):
         for i in range(0,4,1):
             if stat_val[i]<=MIN:
                 stat_val[i] = MIN
-                print i,'found value less than 1e-10, set to 1e-10: curate your dataset' 
+                #print i,'found value less than 1e-10, set to 1e-10: curate your dataset'
+                print('{0} found value less than 1e-10, set to 1e-10: curate your dataset'.format(i))
         return stat_val      
       
 
