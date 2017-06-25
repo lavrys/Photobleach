@@ -1,4 +1,4 @@
-Photobleach
+Photobleach Step Counting
 ===========
 
 Simple Python Code for counting photobleach events and specifying their exact time.
