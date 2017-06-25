@@ -8,7 +8,7 @@ plus some minor modifications to improve speed and usability.
 
 This includes the core evaluator/estimator (i.e the cost function) and auxiliary routines, but not the iterator that optimizes parameters, which is part of the Machine Learning shell. 
 
-A Jupyter notebok is available, containing a full presentation/description of the scientific problem and explaining the use and function of this code. It is possible to run your data through the notebook, but many code parameters that are preset in the notebook could give you a better result, if you chose to change them, which at this time you can only do my changing their values in the code and runing it from the command line.
+A Jupyter notebok is available, containing a full presentation/description of the scientific problem (at the freshman undergraduate level) and explaining the use and function of this code. It is possible to run your data through the notebook, but many code parameters that are preset in the notebook could give you a better result, if you chose to change them, which at this time you can only do my changing their values in the code and runing it from the command line.
 
 A full Machine Learning version with this code at its core is described in a publication which is currently under peer review. As soon as the review is complete the ML version will be published in this repository. This will happen irrespective of whether the review is positive or negative with regards to publication in the reviewing journal; since I am no longer in academia I do not really care that this be published in a journal, so if it is rejected I wil just put it here. 
 
